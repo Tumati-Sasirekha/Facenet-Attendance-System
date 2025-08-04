@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="text-center mt-4">
+  <h2 class="text-success">✅ Attendance Dashboard</h2>
+
+  <form method="get" action="{% url 'dashboard' %}" class="my-4">
+    <label for="date" class="text-info fw-bold">📅 Select Date:</label>
+    <input type="date" name="date" id="date" value="{{ selected_date_str }}" class="form-control w-25 mx-auto">
+    <button type="submit" class="btn btn-primary mt-2">View</button>
+  </form>
+
+  <h3 class="text-info">📋 Attendance for {{ today|date:"F d, Y" }}</h3>
+<form method="get" action="{% url 'download_excel' %}" style="margin-top: 10px;">
+  <input type="text" name="date" placeholder="dd-mm-yyyy" value="{{ request.GET.date }}" class="form-control d-inline w-auto" required>
+  <button type="submit" class="btn btn-outline-success ms-2">📥 Download Excel</button>
+</form>
+
+  {% if no_data %}
+    <p class="text-warning mt-3">🚫 No attendance data available for this date.</p>
+  {% else %}
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-5">
+        <h4 class="text-success">✅ Present Students</h4>
+        <ul class="list-group">
+          {% for roll in present_ids %}
+            <li class="list-group-item bg-dark text-success">{{ roll }}</li>
+          {% empty %}
+            <li class="list-group-item bg-dark text-warning">No Present Students</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="col-md-5">
+        <h4 class="text-danger">❌ Absent Students</h4>
+        <ul class="list-group">
+          {% for roll in absent_ids %}
+            <li class="list-group-item bg-dark text-danger">{{ roll }}</li>
+          {% empty %}
+            <li class="list-group-item bg-dark text-warning">No Absent Students</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

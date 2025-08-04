@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="gradient-bg animate__animated animate__fadeInDown mb-4 text-center">
+  <h2 class="fw-bold">👋 Welcome to Smart Attendance</h2>
+  <p class="lead">Mark your attendance with just your face — secure and easy!</p>
+</div>
+
+<div id="datetime" class="text-center mb-4 time-glow"></div>
+
+<script>
+  function updateDateTime() {
+    const now = new Date();
+    document.getElementById("datetime").innerText = now.toLocaleString();
+  }
+  setInterval(updateDateTime, 1000);
+  updateDateTime();
+</script>
+
+<div class="row justify-content-center animate__animated animate__fadeInUp">
+  <div class="col-md-5 mb-4">
+    <div class="card p-4 text-center shadow">
+      <h5 class="card-title">Start Attendance</h5>
+      <a href="{% url 'start_attendance' %}" class="btn btn-success mt-2">Start</a>
+    </div>
+  </div>
+  <div class="col-md-5 mb-4">
+    <div class="card p-4 text-center shadow">
+      <h5 class="card-title">Dashboard</h5>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary mt-2">View Dashboard</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+    font-family: 'Poppins', sans-serif;
+    color: white;
+    text-align: center;
+    padding: 40px;
+  }
+
+  video {
+    border: 4px solid #00ffe5;
+    box-shadow: 0 0 20px #00ffe5;
+    border-radius: 10px;
+  }
+
+  .result-card {
+    margin: 20px auto;
+    padding: 15px;
+    width: 300px;
+    border-radius: 15px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.3);
+    display: none;
+  }
+
+  .present {
+    color: #00ff99;
+  }
+
+  .unknown {
+    color: #ff4c4c;
+  }
+</style>
+
+<h2>📸 Smart Face Attendance</h2>
+
+<video id="webcam" autoplay playsinline width="480" height="360"></video>
+<canvas id="canvas" style="display: none;"></canvas>
+<div id="resultBox" class="result-card"></div>
+
+<a href="{% url 'dashboard' %}" style="display:block; margin-top:20px; color:#00ffe5;">📊 View Dashboard</a>
+
+<script>
+  const video = document.getElementById("webcam");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+  const resultBox = document.getElementById("resultBox");
+
+  let lastDetected = "";
+  let cooldown = false;
+  let isProcessing = false;
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+    })
+    .catch(err => {
+      showResult("🚫 Camera Error: " + err.message, "unknown");
+    });
+
+  function showResult(message, className) {
+    resultBox.innerHTML = message;
+    resultBox.className = "result-card " + className;
+    resultBox.style.display = "block";
+  }
+
+  function captureAndSend() {
+    if (cooldown || isProcessing || video.videoWidth === 0) return;
+
+    isProcessing = true;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob(blob => {
+      const formData = new FormData();
+      formData.append("image", blob, "frame.jpg");
+
+      fetch("{% url 'start_attendance' %}", {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        isProcessing = false;
+
+        if (data.name === "Spoof") {
+          showResult("🚫 Fake Attempt Detected", "unknown");
+          return;
+        }
+
+        if (data.name === "Not Found" || data.name === "Unknown") {
+          showResult("❌ Face Not Recognized", "unknown");
+          return;
+        }
+
+        if (data.marked && data.name !== lastDetected) {
+          lastDetected = data.name;
+          cooldown = true;
+          showResult(`✅ ${data.name} Marked Present`, "present");
+
+          setTimeout(() => {
+            cooldown = false;
+            lastDetected = "";
+            resultBox.style.display = "none";
+          }, 2000);
+        }
+      })
+      .catch(err => {
+        isProcessing = false;
+        showResult("❌ Error: " + err.message, "unknown");
+        setTimeout(() => {
+          resultBox.style.display = "none";
+        }, 2000);
+      });
+    }, "image/jpeg");
+  }
+
+  setInterval(captureAndSend, 100); 
+</script>
+{% endblock %}

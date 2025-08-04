@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="gradient-bg animate__animated animate__shakeX mt-5">
+  <h2 class="text-white fw-bold">❌ Face Not Recognized</h2>
+  <p class="lead text-light">Ensure your face is clearly visible.</p>
+  <a href="{% url 'start_attendance' %}" class="btn btn-warning mt-3">🔁 Retry</a>
+</div>
+{% endblock %}
